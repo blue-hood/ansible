@@ -1,0 +1,8 @@
+[DEFAULT]
+bantime  = 86400
+findtime  = 86400
+maxretry = 5
+
+[sshd]
+enabled = true
+banaction = firewallcmd-ipset

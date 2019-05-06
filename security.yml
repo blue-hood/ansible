@@ -1,0 +1,78 @@
+- name: 共通のセキュリティ設定
+  hosts: all
+  connection: docker
+  vars:
+    firewalld:
+      services:
+        - http
+        - https
+        - ssh
+
+  tasks:
+    - name: yum アップデート
+      yum: name=* state=latest
+
+    - name: nano インストール
+      yum: name=nano
+
+    - name: yum-cron インストール
+      yum: name=yum-cron
+    - name: "アップデート有効化"
+      lineinfile:
+        path: /etc/yum/yum-cron.conf
+        regexp: "^apply_updates"
+        line: "apply_updates = yes"
+    - name: "セキュリティアップデートのみ実行"
+      lineinfile:
+        path: /etc/yum/yum-cron.conf
+        regexp: "^update_cmd"
+        line: "update_cmd = security"
+    - name: yum-cron 有効化
+      systemd: name=yum-cron enabled=yes
+
+    - name: パスワード認証無効化
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "^PasswordAuthentication"
+        line: "PasswordAuthentication no"
+    - name: チャレンジレスポンス認証無効化
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "^ChallengeResponseAuthentication"
+        line: "ChallengeResponseAuthentication no"
+    - name: root ログイン禁止
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "^PermitRootLogin"
+        line: "PermitRootLogin no"
+
+    - name: SELinux targeted policy インストール
+      yum: name=selinux-policy-targeted
+    - name: setools インストール
+      yum: name=setools
+    - name: libselinux-python インストール
+      yum: name=libselinux-python
+    - name: SELinux 設定
+      selinux: policy=targeted state=enforcing
+
+    - name: fail2ban インストール
+      yum: name=fail2ban enablerepo=epel
+    - name: fail2ban.local コピー
+      copy: src=fail2ban.local dest=/etc/fail2ban/
+    - name: jail.local コピー
+      copy: src=jail.local dest=/etc/fail2ban/
+    - name: "拒否タイプ設定"
+      lineinfile:
+        path: /etc/fail2ban/action.d/iptables-common.conf
+        regexp: "^blocktype"
+        line: "blocktype = DROP"
+    - name: fail2ban 有効化
+      systemd: name=fail2ban enabled=yes
+
+    - name: firewalld 設定
+      firewalld: service={{ item }} permanent=true state=enabled
+      with_items: "{{ firewalld.services }}"
+    - name: firewalld 有効化
+      systemd: name=firewalld enabled=yes
+
+    - debug: msg="作業を完了するには再起動する必要があります。"
