@@ -1,6 +1,7 @@
 - name: 共通のセキュリティ設定
   hosts: all
-  connection: docker
+  connection: ssh
+  become: yes
   vars:
     firewalld:
       services:
@@ -54,6 +55,8 @@
       yum: name=libselinux-python
     - name: SELinux 設定
       selinux: policy=targeted state=enforcing
+    - name: setroubleshoot-server インストール
+      yum: name=setroubleshoot-server
 
     - name: fail2ban インストール
       yum: name=fail2ban enablerepo=epel
