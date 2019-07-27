@@ -4,10 +4,10 @@
   become: yes
   vars:
     firewalld:
-      ports:
-        - 80
-        - 443
-        - 22
+      services:
+        - http
+        - https
+        - ssh
 
   tasks:
     - name: yum アップデート
@@ -73,8 +73,8 @@
       systemd: name=fail2ban enabled=yes
 
     - name: firewalld 設定
-      firewalld: port={{ item }} permanent=true state=enabled immediate=true
-      with_items: "{{ firewalld.ports }}"
+      firewalld: service={{ item }} permanent=true state=enabled
+      with_items: "{{ firewalld.services }}"
     - name: firewalld 有効化
       systemd: name=firewalld enabled=yes
 
