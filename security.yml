@@ -5,8 +5,6 @@
   vars:
     firewalld:
       services:
-        - http
-        - https
         - ssh
 
   tasks:
