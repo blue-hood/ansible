@@ -76,4 +76,7 @@
     - name: firewalld 有効化
       systemd: name=firewalld enabled=yes
 
+    - name: Docker のiptable 設定
+      iptables: action=insert chain=DOCKER in_interface=eth0 jump=DROP
+
     - debug: msg="作業を完了するには再起動する必要があります。"
